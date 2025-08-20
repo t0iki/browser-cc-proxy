@@ -91,7 +91,9 @@ npm start
 
 ## MCPツール一覧
 
-CDP Observer MCPサーバーは、以下の8つのツールを提供します：
+CDP Observer MCPサーバーは、以下の11つのツールを提供します：
+
+### 基本ツール
 
 | ツール名 | 説明 | 主な用途 |
 |---------|------|----------|
@@ -103,6 +105,14 @@ CDP Observer MCPサーバーは、以下の8つのツールを提供します：
 | `cdp_set_filters` | 観測フィルターを設定 | 不要なイベントの除外 |
 | `cdp_get_filters` | 現在のフィルター設定を取得 | 設定確認 |
 | `cdp_stop_observe` | 観測を停止 | リソースの解放 |
+
+### ブラウザ操作ツール（mcp-server.js実装）
+
+| ツール名 | 説明 | 主な用途 |
+|---------|------|----------|
+| `cdp_reload` | ページをリロード | デバッグ中の再読み込み |
+| `cdp_navigate` | 指定URLへナビゲーション | ページ遷移の自動化 |
+| `cdp_execute_script` | JavaScriptコードを実行 | ブラウザ内での操作実行 |
 
 ### 1. cdp_list_targets
 
@@ -309,6 +319,74 @@ CDP Observer MCPサーバーは、以下の8つのツールを提供します：
 }
 ```
 
+### 9. cdp_reload（mcp-server.js実装）
+
+**説明**: 観測中のタブのページをリロードします。
+
+**パラメータ**:
+```typescript
+{
+  targetId: string,        // 必須：対象のターゲットID
+  ignoreCache?: boolean   // キャッシュを無視してリロード (default: false)
+}
+```
+
+**レスポンス例**:
+```json
+{
+  "success": true,
+  "targetId": "E1234567890ABCDEF",
+  "ignoreCache": true,
+  "message": "Page reloaded (cache ignored)"
+}
+```
+
+### 10. cdp_navigate（mcp-server.js実装）
+
+**説明**: 観測中のタブを指定URLへナビゲートします。
+
+**パラメータ**:
+```typescript
+{
+  targetId: string,        // 必須：対象のターゲットID
+  url: string             // 必須：遷移先URL（プロトコル含む）
+}
+```
+
+**レスポンス例**:
+```json
+{
+  "success": true,
+  "targetId": "E1234567890ABCDEF",
+  "url": "https://example.com",
+  "frameId": "F1234567890ABCDEF",
+  "loaderId": "L1234567890ABCDEF"
+}
+```
+
+### 11. cdp_execute_script（mcp-server.js実装）
+
+**説明**: 観測中のタブでJavaScriptコードを実行します。
+
+**パラメータ**:
+```typescript
+{
+  targetId: string,        // 必須：対象のターゲットID
+  expression: string,      // 必須：実行するJavaScriptコード
+  awaitPromise?: boolean  // Promiseの解決を待つ (default: false)
+}
+```
+
+**レスポンス例**:
+```json
+{
+  "success": true,
+  "targetId": "E1234567890ABCDEF",
+  "result": "Hello World",
+  "type": "string"
+}
+```
+
 ## 使用例
 
 ### エラーデバッグの例
@@ -354,6 +432,36 @@ if (errorResponse) {
   });
   console.log(JSON.parse(body.body));
 }
+```
+
+### ブラウザ操作の例（mcp-server.js実装）
+
+```javascript
+// 1. デバッグ対象ページを開く
+const { targetId } = await cdp_observe({ urlIncludes: "localhost:3000" });
+
+// 2. ページをハードリロード
+await cdp_reload({ targetId, ignoreCache: true });
+
+// 3. JavaScript実行でボタンクリック
+await cdp_execute_script({
+  targetId,
+  expression: "document.querySelector('#submit-button').click()"
+});
+
+// 4. 別ページへ遷移
+await cdp_navigate({
+  targetId,
+  url: "https://localhost:3000/debug"
+});
+
+// 5. Promiseベースのコード実行
+const result = await cdp_execute_script({
+  targetId,
+  expression: "fetch('/api/data').then(r => r.json())",
+  awaitPromise: true
+});
+console.log(result.result); // APIレスポンスデータ
 ```
 
 ## MCPリソース
