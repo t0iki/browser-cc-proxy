@@ -1,0 +1,35 @@
+{
+  "name": "cdp-observer",
+  "version": "1.0.0",
+  "description": "MCP CDP Log Observer Server",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc -p .",
+    "start": "node mcp-server.js",
+    "test": "vitest"
+  },
+  "keywords": [
+    "mcp",
+    "cdp",
+    "chrome-devtools",
+    "debugging"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.3",
+    "chrome-remote-interface": "^0.33.2",
+    "pino": "^9.5.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/chrome-remote-interface": "^0.31.14",
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  },
+  "packageManager": "npm@9.6.5+sha1.272c06687abfcb80d37b47955cb33b9292949dc2"
+}

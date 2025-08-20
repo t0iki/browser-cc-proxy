@@ -1,0 +1,10 @@
+node_modules/
+logs/*.json
+logs/*.log
+.env
+.DS_Store
+*.swp
+*.swo
+*~
+npm-debug.log*
+dist
