@@ -96,10 +96,10 @@ npm start
 
 ```typescript
 {
-  host?: string,        // default: "127.0.0.1"
-  port?: number,        // default: 9222
-  filterUrlIncludes?: string,
-  types?: string[]      // e.g., ["page", "webview"]
+  host?: string,            // default: "127.0.0.1"
+  port?: number,            // default: 9222
+  filterUrlIncludes?: string,  // URLでフィルタリング
+  types?: string[]          // タブタイプでフィルタ e.g., ["page", "webview"]
 }
 ```
 
@@ -108,14 +108,14 @@ npm start
 
 ```typescript
 {
-  host?: string,
-  port?: number,
-  targetId?: string,    // いずれか必須
-  urlIncludes?: string, // いずれか必須
-  includeWorkers?: boolean,  // default: true
-  includeIframes?: boolean,  // default: true
-  bufferSize?: number,       // default: 10000
-  ttlSec?: number           // default: 3600
+  host?: string,            // default: "127.0.0.1"
+  port?: number,            // default: 9222
+  targetId?: string,        // ターゲットID（targetIdかurlIncludesのいずれかが必須）
+  urlIncludes?: string,     // URLパターン（targetIdかurlIncludesのいずれかが必須）
+  includeWorkers?: boolean, // default: true
+  includeIframes?: boolean, // default: true
+  bufferSize?: number,      // イベントバッファサイズ
+  ttlSec?: number          // セッションTTL（秒）
 }
 ```
 
@@ -124,12 +124,12 @@ npm start
 
 ```typescript
 {
-  targetId: string,
-  offset?: number,      // default: 0
-  limit?: number,       // default: 200
-  kinds?: ("console"|"log"|"request"|"response"|...)[]
-  urlIncludes?: string,
-  method?: string       // GET/POST等
+  targetId: string,         // 必須：対象のターゲットID
+  offset?: number,          // default: 0 - 読み取り開始位置
+  limit?: number,           // default: 200 - 最大取得件数
+  kinds?: string[],         // イベント種別でフィルタ: "console", "log", "request", "response", "loadingFinished", "loadingFailed", "websocket", "other"
+  urlIncludes?: string,     // URLパターンでフィルタ
+  method?: string          // HTTPメソッドでフィルタ（GET/POST等）
 }
 ```
 
@@ -138,17 +138,52 @@ npm start
 
 ```typescript
 {
-  targetId: string,
-  requestId: string,
-  base64?: boolean     // default: false
+  targetId: string,         // 必須：対象のターゲットID
+  requestId: string,        // 必須：リクエストID
+  base64?: boolean         // default: false - Base64エンコードで返すか
 }
 ```
 
-### cdp_set_filters / cdp_get_filters
-観測フィルターの設定・取得
+### cdp_set_filters
+観測フィルターの設定
 
-### cdp_stop_observe / cdp_clear_events
-観測の停止・イベントクリア
+```typescript
+{
+  targetId: string,                    // 必須：対象のターゲットID
+  kinds?: string[],                    // イベント種別: "console", "log", "network"
+  urlAllowlist?: string[],             // 許可するURLパターン
+  urlBlocklist?: string[],             // ブロックするURLパターン
+  maxBodyBytes?: number                // レスポンスボディの最大サイズ
+}
+```
+
+### cdp_get_filters
+現在のフィルター設定を取得
+
+```typescript
+{
+  targetId: string         // 必須：対象のターゲットID
+}
+```
+
+### cdp_stop_observe
+観測の停止
+
+```typescript
+{
+  targetId: string,        // 必須：対象のターゲットID
+  dropBuffer?: boolean     // default: false - バッファを削除するか
+}
+```
+
+### cdp_clear_events
+イベントバッファのクリア
+
+```typescript
+{
+  targetId: string         // 必須：対象のターゲットID
+}
+```
 
 ## MCPリソース
 
