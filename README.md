@@ -89,99 +89,270 @@ npm start
 }
 ```
 
-## MCPツール
+## MCPツール一覧
 
-### cdp_list_targets
-利用可能なCDPターゲット（ブラウザタブ）を一覧表示
+CDP Observer MCPサーバーは、以下の8つのツールを提供します：
 
+| ツール名 | 説明 | 主な用途 |
+|---------|------|----------|
+| `cdp_list_targets` | 利用可能なCDPターゲット（ブラウザタブ）を一覧表示 | デバッグ対象のタブを探す |
+| `cdp_observe` | 指定ターゲットの観測を開始 | ログとネットワークイベントの記録開始 |
+| `cdp_read_events` | バッファからイベントを取得・フィルタリング | エラーやAPIレスポンスの検索 |
+| `cdp_clear_events` | イベントバッファをクリア | バッファのリセット |
+| `cdp_get_response_body` | ネットワークレスポンスの本文を取得 | API応答の詳細確認 |
+| `cdp_set_filters` | 観測フィルターを設定 | 不要なイベントの除外 |
+| `cdp_get_filters` | 現在のフィルター設定を取得 | 設定確認 |
+| `cdp_stop_observe` | 観測を停止 | リソースの解放 |
+
+### 1. cdp_list_targets
+
+**説明**: 利用可能なCDPターゲット（ブラウザタブ）を一覧表示します。
+
+**パラメータ**:
 ```typescript
 {
-  host?: string,            // default: "127.0.0.1"
-  port?: number,            // default: 9222
-  filterUrlIncludes?: string,  // URLでフィルタリング
-  types?: string[]          // タブタイプでフィルタ e.g., ["page", "webview"]
+  host?: string,              // CDPホスト (default: "127.0.0.1")
+  port?: number,              // CDPポート (default: 9222)
+  filterUrlIncludes?: string, // URLパターンでフィルタリング
+  types?: string[]           // タブタイプでフィルタ ["page", "webview", "iframe", "worker"]
 }
 ```
 
-### cdp_observe
-指定ターゲットの観測を開始
-
-```typescript
+**レスポンス例**:
+```json
 {
-  host?: string,            // default: "127.0.0.1"
-  port?: number,            // default: 9222
-  targetId?: string,        // ターゲットID（targetIdかurlIncludesのいずれかが必須）
-  urlIncludes?: string,     // URLパターン（targetIdかurlIncludesのいずれかが必須）
-  includeWorkers?: boolean, // default: true
-  includeIframes?: boolean, // default: true
-  bufferSize?: number,      // イベントバッファサイズ
-  ttlSec?: number          // セッションTTL（秒）
+  "targets": [
+    {
+      "id": "E1234567890ABCDEF",
+      "type": "page",
+      "title": "Example Page",
+      "url": "https://example.com",
+      "attached": false
+    }
+  ]
 }
 ```
 
-### cdp_read_events
-バッファからイベントを取得
+### 2. cdp_observe
 
+**説明**: 指定したターゲット（タブ）のConsoleとNetworkイベントの観測を開始します。
+
+**パラメータ**:
+```typescript
+{
+  host?: string,            // CDPホスト (default: "127.0.0.1")
+  port?: number,            // CDPポート (default: 9222)
+  targetId?: string,        // ターゲットID（いずれか必須）
+  urlIncludes?: string,     // URLパターン（いずれか必須）
+  includeWorkers?: boolean, // Workerイベントも含む (default: true)
+  includeIframes?: boolean, // iframeイベントも含む (default: true)
+  bufferSize?: number,      // イベントバッファサイズ (default: 10000)
+  ttlSec?: number          // セッションTTL秒 (default: 3600)
+}
+```
+
+**レスポンス例**:
+```json
+{
+  "targetId": "E1234567890ABCDEF",
+  "resourceUri": "cdp://events/E1234567890ABCDEF",
+  "attached": true
+}
+```
+
+### 3. cdp_read_events
+
+**説明**: バッファに蓄積されたイベントを取得・フィルタリングします。
+
+**パラメータ**:
 ```typescript
 {
   targetId: string,         // 必須：対象のターゲットID
-  offset?: number,          // default: 0 - 読み取り開始位置
-  limit?: number,           // default: 200 - 最大取得件数
-  kinds?: string[],         // イベント種別でフィルタ: "console", "log", "request", "response", "loadingFinished", "loadingFailed", "websocket", "other"
-  urlIncludes?: string,     // URLパターンでフィルタ
-  method?: string          // HTTPメソッドでフィルタ（GET/POST等）
+  offset?: number,          // 読み取り開始位置 (default: 0)
+  limit?: number,           // 最大取得件数 (default: 200)
+  kinds?: string[],         // イベント種別フィルタ:
+                           // "console", "log", "request", "response",
+                           // "loadingFinished", "loadingFailed", "websocket", "other"
+  urlIncludes?: string,     // URLパターンフィルタ
+  method?: string          // HTTPメソッドフィルタ (GET/POST/PUT/DELETE等)
 }
 ```
 
-### cdp_get_response_body
-ネットワークレスポンスの本文を取得
-
-```typescript
+**レスポンス例**:
+```json
 {
-  targetId: string,         // 必須：対象のターゲットID
-  requestId: string,        // 必須：リクエストID
-  base64?: boolean         // default: false - Base64エンコードで返すか
+  "nextOffset": 150,
+  "events": [
+    {
+      "seq": 100,
+      "ts": 1700000000000,
+      "targetId": "E1234567890ABCDEF",
+      "kind": "console",
+      "type": "error",
+      "text": "TypeError: Cannot read property 'foo' of undefined",
+      "stack": {...}
+    },
+    {
+      "seq": 101,
+      "ts": 1700000001000,
+      "kind": "request",
+      "requestId": "12345.67",
+      "url": "https://api.example.com/data",
+      "method": "GET"
+    }
+  ]
 }
 ```
 
-### cdp_set_filters
-観測フィルターの設定
+### 4. cdp_clear_events
 
-```typescript
-{
-  targetId: string,                    // 必須：対象のターゲットID
-  kinds?: string[],                    // イベント種別: "console", "log", "network"
-  urlAllowlist?: string[],             // 許可するURLパターン
-  urlBlocklist?: string[],             // ブロックするURLパターン
-  maxBodyBytes?: number                // レスポンスボディの最大サイズ
-}
-```
+**説明**: 指定ターゲットのイベントバッファをクリアします。
 
-### cdp_get_filters
-現在のフィルター設定を取得
-
+**パラメータ**:
 ```typescript
 {
   targetId: string         // 必須：対象のターゲットID
 }
 ```
 
-### cdp_stop_observe
-観測の停止
+**レスポンス例**:
+```json
+{
+  "cleared": true
+}
+```
 
+### 5. cdp_get_response_body
+
+**説明**: ネットワークレスポンスの本文を取得します。
+
+**パラメータ**:
 ```typescript
 {
   targetId: string,        // 必須：対象のターゲットID
-  dropBuffer?: boolean     // default: false - バッファを削除するか
+  requestId: string,       // 必須：リクエストID (cdp_read_eventsで取得)
+  base64?: boolean        // Base64エンコードで返す (default: false)
 }
 ```
 
-### cdp_clear_events
-イベントバッファのクリア
+**レスポンス例**:
+```json
+{
+  "requestId": "12345.67",
+  "mimeType": "application/json",
+  "encoded": false,
+  "body": "{\"status\":\"ok\",\"data\":[...]}"
+}
+```
 
+### 6. cdp_set_filters
+
+**説明**: イベント観測時のフィルターを設定します。
+
+**パラメータ**:
+```typescript
+{
+  targetId: string,         // 必須：対象のターゲットID
+  kinds?: string[],         // 収集するイベント種別 ["console", "log", "network"]
+  urlAllowlist?: string[],  // 許可するURLパターンリスト
+  urlBlocklist?: string[],  // ブロックするURLパターンリスト
+  maxBodyBytes?: number    // レスポンスボディの最大サイズ (default: 64000)
+}
+```
+
+**レスポンス例**:
+```json
+{
+  "updated": true
+}
+```
+
+### 7. cdp_get_filters
+
+**説明**: 現在設定されているフィルターを取得します。
+
+**パラメータ**:
 ```typescript
 {
   targetId: string         // 必須：対象のターゲットID
+}
+```
+
+**レスポンス例**:
+```json
+{
+  "filters": {
+    "kinds": ["console", "network"],
+    "urlAllowlist": [],
+    "urlBlocklist": ["*.google-analytics.com/*"],
+    "maxBodyBytes": 64000
+  }
+}
+```
+
+### 8. cdp_stop_observe
+
+**説明**: ターゲットの観測を停止し、リソースを解放します。
+
+**パラメータ**:
+```typescript
+{
+  targetId: string,        // 必須：対象のターゲットID
+  dropBuffer?: boolean    // バッファも削除する (default: false)
+}
+```
+
+**レスポンス例**:
+```json
+{
+  "stopped": true
+}
+```
+
+## 使用例
+
+### エラーデバッグの例
+
+```javascript
+// 1. 対象タブを探す
+const targets = await cdp_list_targets({ filterUrlIncludes: "myapp.com" });
+
+// 2. 観測を開始
+const { targetId } = await cdp_observe({ urlIncludes: "myapp.com" });
+
+// 3. エラーを検索
+const { events } = await cdp_read_events({
+  targetId,
+  kinds: ["console"],
+  limit: 10
+});
+
+// 4. エラーの詳細を確認
+const errors = events.filter(e => e.type === "error");
+console.log(errors);
+```
+
+### API監視の例
+
+```javascript
+// 1. API通信を観測
+const { targetId } = await cdp_observe({ urlIncludes: "api.example.com" });
+
+// 2. APIレスポンスを取得
+const { events } = await cdp_read_events({
+  targetId,
+  kinds: ["response"],
+  urlIncludes: "/api/"
+});
+
+// 3. エラーレスポンスの本文を取得
+const errorResponse = events.find(e => e.status >= 400);
+if (errorResponse) {
+  const body = await cdp_get_response_body({
+    targetId,
+    requestId: errorResponse.requestId
+  });
+  console.log(JSON.parse(body.body));
 }
 ```
 
