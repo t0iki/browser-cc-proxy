@@ -1,7 +1,7 @@
 {
-  "name": "cdp-observer",
+  "name": "browser-cc-proxy",
   "version": "1.0.0",
-  "description": "MCP CDP Log Observer Server",
+  "description": "Chrome DevTools Protocol Observer for Model Context Protocol (MCP)",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
@@ -12,11 +12,22 @@
   },
   "keywords": [
     "mcp",
+    "model-context-protocol",
     "cdp",
-    "chrome-devtools",
-    "debugging"
+    "chrome-devtools-protocol",
+    "browser-automation",
+    "debugging",
+    "web-development"
   ],
-  "author": "",
+  "author": "t0iki",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/t0iki/browser-cc-proxy"
+  },
+  "bugs": {
+    "url": "https://github.com/t0iki/browser-cc-proxy/issues"
+  },
+  "homepage": "https://github.com/t0iki/browser-cc-proxy#readme",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.3",
