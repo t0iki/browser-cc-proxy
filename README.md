@@ -32,7 +32,7 @@ npm run build
 
 **Add to ~/.zshrc for convenience:**
 ```bash
-alias arc-debug='/Applications/Arc.app/Contents/MacOS/Arc --remote-debugging-address=127.0.0.1 --remote-debugging-port=9222 --user-data-dir=/tmp/arc-debug --no-first-run --no-default-browser-check'
+alias arc='/Applications/Arc.app/Contents/MacOS/Arc --remote-debugging-address=127.0.0.1 --remote-debugging-port=9222 --user-data-dir=/tmp/arc-debug --no-first-run --no-default-browser-check'
 ```
 
 After adding, run `source ~/.zshrc` and use `arc-debug` to start.
